@@ -39,39 +39,46 @@ const child_process_1 = require("child_process");
 let lastPlayedAt = 0;
 let outputChannel;
 function getOutputChannel() {
-    if (!outputChannel) {
-        outputChannel = vscode.window.createOutputChannel('Error Sound');
-    }
+    if (!outputChannel)
+        outputChannel = vscode.window.createOutputChannel("Error Sound");
     return outputChannel;
 }
 function playErrorSound(soundUri) {
-    if (!soundUri) {
+    if (!soundUri)
         return;
-    }
     const now = Date.now();
-    if (now - lastPlayedAt < 2000) {
+    if (now - lastPlayedAt < 1500)
         return;
-    }
     lastPlayedAt = now;
-    const channel = getOutputChannel();
-    if (process.platform !== 'win32') {
-        channel.appendLine('ErrorSound: Non-Windows platform detected; skipping sound playback.');
+    const ch = getOutputChannel();
+    if (process.platform !== "win32") {
+        ch.appendLine("Non-Windows: skipping sound.");
         return;
     }
-    const filePath = soundUri.fsPath.replace(/'/g, "''");
-    const script = `(New-Object Media.SoundPlayer '${filePath}').PlaySync()`;
-    try {
-        const child = (0, child_process_1.spawn)('powershell.exe', ['-NoProfile', '-Command', script], {
-            detached: true,
-            windowsHide: true
-        });
-        child.on('error', (err) => {
-            channel.appendLine(`ErrorSound: Failed to play sound - ${err.message}`);
-        });
-    }
-    catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        channel.appendLine(`ErrorSound: Exception while spawning PowerShell - ${message}`);
-    }
+    const wavPath = soundUri.fsPath;
+    // Use absolute PowerShell path (more reliable than 'powershell.exe' on PATH)
+    const ps = `${process.env.SystemRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
+    // Use MediaPlayer + sleeps (SoundPlayer can be flaky when spawned)
+    // Escape backslashes for PS string
+    const psPath = wavPath.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const script = `Add-Type -AssemblyName presentationCore; ` +
+        `$p="${psPath}"; ` +
+        `$player=New-Object System.Windows.Media.MediaPlayer; ` +
+        `$player.Open([Uri]$p); ` +
+        `Start-Sleep -Milliseconds 500; ` +
+        `$player.Volume=1.0; ` +
+        `$player.Play(); ` +
+        `Start-Sleep -Seconds 3;`;
+    ch.appendLine(`Playing: ${wavPath}`);
+    const child = (0, child_process_1.spawn)(ps, ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script], { windowsHide: true } // IMPORTANT: no detached
+    );
+    child.stdout?.on("data", (d) => ch.appendLine(`stdout: ${String(d)}`));
+    child.stderr?.on("data", (d) => ch.appendLine(`stderr: ${String(d)}`));
+    child.on("error", (err) => {
+        ch.appendLine(`Spawn error: ${err.message}`);
+    });
+    child.on("exit", (code) => {
+        ch.appendLine(`PowerShell exit code: ${code}`);
+    });
 }
 //# sourceMappingURL=soundPlayer.js.map

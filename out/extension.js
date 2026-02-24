@@ -38,48 +38,15 @@ exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const soundPlayer_1 = require("./soundPlayer");
 let config = {
-    filePath: '',
-    enableDiagnostics: true,
-    enableTerminal: true,
-    terminalPatterns: []
+    enableDiagnostics: true
 };
 let soundUri;
-let warnedMissingSound = false;
-let terminalRegexes = [];
 const fileHasError = new Map();
-const terminalBuffers = new Map();
 function loadConfig() {
     const cfg = vscode.workspace.getConfiguration('errorSound');
     config = {
-        filePath: cfg.get('filePath', ''),
-        enableDiagnostics: cfg.get('enableDiagnostics', true),
-        enableTerminal: cfg.get('enableTerminal', true),
-        terminalPatterns: cfg.get('terminalPatterns', [
-            'error',
-            'exception',
-            '\\b(4\\d{2}|5\\d{2})\\b'
-        ])
+        enableDiagnostics: cfg.get('enableDiagnostics', true)
     };
-    const folders = vscode.workspace.workspaceFolders;
-    if (!folders || !folders.length || !config.filePath) {
-        soundUri = undefined;
-        if (!warnedMissingSound) {
-            warnedMissingSound = true;
-            vscode.window.showWarningMessage('Error Sound: workspace folder or errorSound.filePath is not set; sound playback is disabled.');
-        }
-    }
-    else {
-        soundUri = vscode.Uri.joinPath(folders[0].uri, config.filePath);
-    }
-    terminalRegexes = [];
-    for (const pattern of config.terminalPatterns) {
-        try {
-            terminalRegexes.push(new RegExp(pattern, 'i'));
-        }
-        catch {
-            // Ignore invalid regex patterns.
-        }
-    }
 }
 function handleDiagnosticsChange(uris) {
     if (!config.enableDiagnostics) {
@@ -96,47 +63,21 @@ function handleDiagnosticsChange(uris) {
         }
     }
 }
-function handleTerminalData(event) {
-    if (!config.enableTerminal || !soundUri || terminalRegexes.length === 0) {
-        return;
-    }
-    const terminal = event.terminal;
-    if (!terminal) {
-        return;
-    }
-    const id = terminal.name || 'default';
-    const data = event.data ?? '';
-    if (!data) {
-        return;
-    }
-    const previous = terminalBuffers.get(id) ?? '';
-    const combined = previous + data;
-    const lines = combined.split(/\r?\n/);
-    const remainder = lines.pop() ?? '';
-    terminalBuffers.set(id, remainder);
-    for (const line of lines) {
-        if (!line) {
-            continue;
-        }
-        if (terminalRegexes.some(regex => regex.test(line))) {
-            (0, soundPlayer_1.playErrorSound)(soundUri);
-            break;
-        }
-    }
-}
 function activate(context) {
+    // Bundled sound file in the extension root.
+    soundUri = vscode.Uri.joinPath(context.extensionUri, 'FAHHH.wav');
+    if (soundUri) {
+        vscode.workspace.fs.stat(soundUri).then(() => {
+            // File exists; nothing else to do.
+        }, () => {
+            soundUri = undefined;
+            vscode.window.showWarningMessage('Error Sound: bundled WAV file could not be found; sound playback is disabled.');
+        });
+    }
     loadConfig();
     const diagnosticsSubscription = vscode.languages.onDidChangeDiagnostics((e) => {
         handleDiagnosticsChange(e.uris);
     });
-    // Terminal data event is available in newer VS Code / Cursor versions.
-    const windowAny = vscode.window;
-    if (typeof windowAny.onDidWriteTerminalData === 'function') {
-        const terminalSubscription = windowAny.onDidWriteTerminalData((event) => {
-            handleTerminalData(event);
-        });
-        context.subscriptions.push(terminalSubscription);
-    }
     const configSubscription = vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration('errorSound')) {
             loadConfig();
@@ -144,9 +85,10 @@ function activate(context) {
     });
     const testCommand = vscode.commands.registerCommand('errorSound.playTestSound', () => {
         if (!soundUri) {
-            vscode.window.showWarningMessage('Error Sound: sound file is not configured or workspace folder is missing.');
+            vscode.window.showWarningMessage('Error Sound: bundled sound file could not be resolved.');
             return;
         }
+        vscode.window.showInformationMessage(`Sound path: ${soundUri.fsPath}`);
         (0, soundPlayer_1.playErrorSound)(soundUri);
     });
     context.subscriptions.push(diagnosticsSubscription, configSubscription, testCommand);
