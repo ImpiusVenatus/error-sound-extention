@@ -2,7 +2,7 @@
   "name": "error-sound-extension",
   "displayName": "Error Sound Extension",
   "description": "Play a custom sound when compilation or terminal/server errors occur.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "ImpiusVenatus",
   "license": "SEE LICENSE",
   "repository": {
