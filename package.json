@@ -3,7 +3,7 @@
   "displayName": "Error Sound Extension",
   "description": "Play a custom sound when compilation or terminal/server errors occur.",
   "version": "0.0.1",
-  "publisher": "your-name",
+  "publisher": "ImpiusVenatus",
   "license": "SEE LICENSE",
   "repository": {
     "type": "git",
