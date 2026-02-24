@@ -4,6 +4,11 @@
   "description": "Play a custom sound when compilation or terminal/server errors occur.",
   "version": "0.0.1",
   "publisher": "your-name",
+  "license": "SEE LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ImpiusVenatus/error-sound-extention"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -11,18 +16,13 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
       "title": "Error Sound",
       "properties": {
-        "errorSound.filePath": {
-          "type": "string",
-          "default": "assets/error.wav",
-          "description": "Path to the sound file, relative to the first workspace folder (e.g. assets/error.wav)."
-        },
         "errorSound.enableDiagnostics": {
           "type": "boolean",
           "default": true,

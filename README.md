@@ -1,72 +1,28 @@
 ## Error Sound Extension
 
-This is a very simple VS Code / Cursor extension that plays a custom sound whenever:
+This extension plays a built‑in sound effect whenever something goes wrong in your coding workflow, such as:
 
-- **Diagnostics** with severity Error appear in your workspace.
-- **Terminal output** looks like an error (matches simple regex patterns, including HTTP 4xx/5xx codes).
+- **Diagnostics** with severity Error appearing in your project.
+- **Terminal output** that looks like an error (for example lines containing “error”, “exception”, or HTTP 4xx/5xx status codes like 404 or 500).
 
-### Setup
+The sound file is bundled with the extension (no configuration needed).
 
-- Put your sound file (e.g. `error.wav`) somewhere inside your workspace, for example:
-  - `assets/error.wav`
-- In your VS Code or Cursor `settings.json`, configure:
+### How to install
 
-```json
-{
-  "errorSound.filePath": "assets/error.wav"
-}
-```
-
-Optional settings:
-
-- `errorSound.enableDiagnostics` (boolean, default `true`)
-- `errorSound.enableTerminal` (boolean, default `true`)
-- `errorSound.terminalPatterns` (string[], default `["error", "exception", "\\b(4\\d{2}|5\\d{2})\\b"]`)
-
-### Development
-
-- Install dependencies (run this in the extension folder):
-
-```bash
-npm install
-```
-
-- Compile:
-
-```bash
-npm run compile
-```
-
-### Packaging for VS Code
-
-To install this extension on any machine as a `.vsix` file:
-
-1. **Install `vsce` (VS Code Extension Manager)** on a machine with Node.js:
-   - Using npm:
+1. Build the extension package as a `.vsix` file (from the folder containing `package.json`):
 
    ```bash
-   npm install -g @vscode/vsce
+   vsce package
    ```
 
-2. **Build the extension package** (from the extension folder that contains `package.json`):
+   This creates a file like `error-sound-extension-0.0.1.vsix`.
 
-```bash
-vsce package
-```
+2. Install the `.vsix` into your editor:
 
-This creates a file like `error-sound-extension-0.0.1.vsix` in the same folder.
+   - Open your editor (for example, VS Code).
+   - Open the extensions view.
+   - Use the menu option to **Install from VSIX...**.
+   - Select the generated `.vsix` file and confirm.
 
-3. **Install the `.vsix` into VS Code** on any desktop:
-   - Open VS Code.
-   - Go to the **Extensions** view.
-   - Click the `...` menu (top-right) → **Install from VSIX...**.
-   - Select your `.vsix` file and confirm.
-
-Alternatively, from a terminal:
-
-```bash
-code --install-extension error-sound-extension-0.0.1.vsix
-```
-
-You can now share the `.vsix` file and install it on any VS Code instance.
+3. Reload the editor if prompted. The bundled sound will now play automatically when errors are detected.
 

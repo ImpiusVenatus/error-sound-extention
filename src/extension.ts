@@ -2,21 +2,18 @@ import * as vscode from 'vscode';
 import { playErrorSound } from './soundPlayer';
 
 interface ErrorSoundConfig {
-  filePath: string;
   enableDiagnostics: boolean;
   enableTerminal: boolean;
   terminalPatterns: string[];
 }
 
 let config: ErrorSoundConfig = {
-  filePath: '',
   enableDiagnostics: true,
   enableTerminal: true,
   terminalPatterns: []
 };
 
 let soundUri: vscode.Uri | undefined;
-let warnedMissingSound = false;
 let terminalRegexes: RegExp[] = [];
 const fileHasError = new Map<string, boolean>();
 const terminalBuffers = new Map<string, string>();
@@ -25,7 +22,6 @@ function loadConfig(): void {
   const cfg = vscode.workspace.getConfiguration('errorSound');
 
   config = {
-    filePath: cfg.get<string>('filePath', ''),
     enableDiagnostics: cfg.get<boolean>('enableDiagnostics', true),
     enableTerminal: cfg.get<boolean>('enableTerminal', true),
     terminalPatterns: cfg.get<string[]>('terminalPatterns', [
@@ -34,17 +30,6 @@ function loadConfig(): void {
       '\\b(4\\d{2}|5\\d{2})\\b'
     ])
   };
-
-  const folders = vscode.workspace.workspaceFolders;
-  if (!folders || !folders.length || !config.filePath) {
-    soundUri = undefined;
-    if (!warnedMissingSound) {
-      warnedMissingSound = true;
-      vscode.window.showWarningMessage('Error Sound: workspace folder or errorSound.filePath is not set; sound playback is disabled.');
-    }
-  } else {
-    soundUri = vscode.Uri.joinPath(folders[0].uri, config.filePath);
-  }
 
   terminalRegexes = [];
   for (const pattern of config.terminalPatterns) {
@@ -108,6 +93,8 @@ function handleTerminalData(event: { terminal: vscode.Terminal | undefined; data
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  // Bundled sound file in the extension root.
+  soundUri = vscode.Uri.joinPath(context.extensionUri, 'FAHHH (Meme Sound Effect).mp3');
   loadConfig();
 
   const diagnosticsSubscription = vscode.languages.onDidChangeDiagnostics((e: vscode.DiagnosticChangeEvent) => {
@@ -131,7 +118,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const testCommand = vscode.commands.registerCommand('errorSound.playTestSound', () => {
     if (!soundUri) {
-      vscode.window.showWarningMessage('Error Sound: sound file is not configured or workspace folder is missing.');
+      vscode.window.showWarningMessage('Error Sound: bundled sound file could not be resolved.');
       return;
     }
     playErrorSound(soundUri);
