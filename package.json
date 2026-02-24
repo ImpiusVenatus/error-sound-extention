@@ -1,0 +1,66 @@
+{
+  "name": "error-sound-extension",
+  "displayName": "Error Sound Extension",
+  "description": "Play a custom sound when compilation or terminal/server errors occur.",
+  "version": "0.0.1",
+  "publisher": "your-name",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Error Sound",
+      "properties": {
+        "errorSound.filePath": {
+          "type": "string",
+          "default": "assets/error.wav",
+          "description": "Path to the sound file, relative to the first workspace folder (e.g. assets/error.wav)."
+        },
+        "errorSound.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play the sound when files gain new diagnostics with severity Error."
+        },
+        "errorSound.enableTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play the sound when terminal output matches error-like patterns."
+        },
+        "errorSound.terminalPatterns": {
+          "type": "array",
+          "description": "Regular expression patterns (strings) used to detect error-like lines in terminal output.",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "error",
+            "exception",
+            "\\\\b(4\\\\d{2}|5\\\\d{2})\\\\b"
+          ]
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "errorSound.playTestSound",
+        "title": "Error Sound: Play Test Sound"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.0"
+  }
+}

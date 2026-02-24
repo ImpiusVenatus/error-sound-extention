@@ -1,0 +1,22 @@
+# Node / TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+out/
+dist/
+
+# VS Code / Cursor workspace data
+.vscode/*
+!.vscode/extensions.json
+
+# VSIX packages
+*.vsix
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
